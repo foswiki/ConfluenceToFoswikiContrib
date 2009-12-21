@@ -1,0 +1,23 @@
+Pre-requisites:
+-----------------------
+1.Perl version: 5.x (this tool has been tested on 5.8.8 version. May work with old versions of Perl 5.x.x)
+
+
+2. Perl Modules (from CPAN)
+
+Log::Log4perl
+HTTP::Lite
+RPC::XML
+Error
+XML::LibXML
+XML::LibXML::Common
+Algorithm::Diff
+XMLRPC::Lite
+Getopt::Std
+Cwd
+Archive::Extract
+Archive::Zip
+
+
+2.TWiki - version 4.2.0 (not tested on old version of TWiki) from http://www.twiki.org
+ 
