@@ -1,18 +1,18 @@
-package WikiText::TWiki;
+package WikiText::Foswiki;
 
 1;
 
 =head1 NAME
 
-WikiText::TWiki - TWiki WikiText Module
+WikiText::Foswiki - Foswiki WikiText Module
 
 =head1 SYNOPSIS
 
-    use WikiText::TWiki;
+    use WikiText::Foswiki;
     
 =head1 DESCRIPTION
 
-Placeholder module for TWiki. Coming soon.
+Placeholder module for Foswiki. Coming soon.
 
 =head1 AUTHOR
 

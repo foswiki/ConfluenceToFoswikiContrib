@@ -11,8 +11,8 @@ package Convertor;
 use strict;
 use warnings;
 use Exporter;
-use TWiki;
-use TWiki::Func;
+use Foswiki;
+use Foswiki::Func;
 use Utils::Common;
 
 our @ISA = qw(Exporter);
@@ -25,7 +25,7 @@ our $logger;
 
 =head1 NAME
 
-Convertor - convert to twiki web.
+Convertor - convert to foswiki web.
 
 =head1 DESCRIPTION
 Implemented createSession, saveTopic, saveAttachment
@@ -35,23 +35,23 @@ Implemented createSession, saveTopic, saveAttachment
 
 #######################################################################
 #Function Name : createSession
-#Purpose : create session logging in twiki 
-#Input : user, passowrd ( for twiki ) 
+#Purpose : create session logging in foswiki
+#Input : user, passowrd ( for foswiki ) 
 #Output : hash of spaces with key as spacekey and value as spacename
 #######################################################################
 
 sub createSession {
     my ($user, $password) = @_;
-    $TWiki::Plugins::SESSION = new TWiki($user);
-    $TWiki::cfg{DefaultUserLogin} = $user;
-    $TWiki::cfg{Password} = $password;
-    my $session = $TWiki::Plugins::SESSION;
+    $Foswiki::Plugins::SESSION = new Foswiki($user);
+    $Foswiki::cfg{DefaultUserLogin} = $user;
+    $Foswiki::cfg{Password} = $password;
+    my $session = $Foswiki::Plugins::SESSION;
     return $session;
 }
 
 #######################################################################
 #Function Name : saveTopic
-#Purpose : save topic for twiki 
+#Purpose : save topic for foswiki
 #Input : confluence object, token 
 #Output : undef if success , error string if not.
 #######################################################################
@@ -73,12 +73,12 @@ sub saveTopic {
 	if (!defined $return2 or $return2 != 1) {
 	    $logger->info("Creating topic \"$topic\"\n");	
         #$text = Utils::Common::quote($text);
-        require TWiki::Meta;
-        my $meta = new TWiki::Meta($session, $web, $topic, $text);
+        require Foswiki::Meta;
+        my $meta = new Foswiki::Meta($session, $web, $topic, $text);
         if ($parent) {
             $meta->put('TOPICPARENT', { name => $parent });
         }
-        my $result = TWiki::Func::saveTopic( $web, $topic, $meta, $text);
+        my $result = Foswiki::Func::saveTopic( $web, $topic, $meta, $text);
         return $result;
 	}
 	else {
@@ -101,7 +101,7 @@ sub saveAttachment {
     $logger->info("Attaching $name to $topic in web $web");
     $logger->debug("file attached is $data->{'filepath'}/1");
     
-    my $result = TWiki::Func::saveAttachment($web, $topic, $name, 
+    my $result = Foswiki::Func::saveAttachment($web, $topic, $name, 
     {
         file => "$data->{filepath}/1",
         comment => $data->{'comment'},
@@ -115,28 +115,28 @@ sub createWeb {
     $baseWeb = '_default';
     $logger->debug("Creating Web $newWeb with baseweb $baseWeb");
     $opts = {METATOPICPARENT => "WebHome"};
-    my $return = TWiki::Func::createWeb($newWeb, $baseWeb, $opts);
+    my $return = Foswiki::Func::createWeb($newWeb, $baseWeb, $opts);
     return $return;
 }
 
 
 sub webExists { 
 	my ($web) = @_;
-    my $ret = TWiki::Func::webExists($web);
+    my $ret = Foswiki::Func::webExists($web);
     return $ret;
 }
 
 
 sub topicExists {
 	my ($web , $topic) = @_;
-	my $ret = TWiki::Func::topicExists($web, $topic);
+	my $ret = Foswiki::Func::topicExists($web, $topic);
 	return $ret;
 }
 
 
 sub attachmentExists {
     my( $web, $topic, $attachment ) = @_;
-    my $ret = TWiki::Func::attachmentExists($web, $topic, $attachment);
+    my $ret = Foswiki::Func::attachmentExists($web, $topic, $attachment);
     return $ret;
 }
 

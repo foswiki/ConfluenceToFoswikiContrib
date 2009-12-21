@@ -52,15 +52,15 @@ if (not defined $hOpts{'g'}) {
 
 parse_conf($sHomeDir, $sConfigFile, \%hConfig);
 
-$logger->info("START : Twiki web generation");
+$logger->info("START : Foswiki web generation");
 $logger->info("Homedir : $sHomeDir");
-$logger->info("Twiki user : $hConfig{User}");
+$logger->info("Foswiki user : $hConfig{User}");
 
 
 my $session = Convertor::createSession("$hConfig{User}", "$hConfig{Password}");
 my $flag = 0;
 if (!defined $session) {
-    $logger->error("Twiki Session not created, cannot proceed");
+    $logger->error("Foswiki Session not created, cannot proceed");
     $logger->error("Check User and Password in $sConfigFile");
 }
 
@@ -74,15 +74,15 @@ if ($flag == 0) {
 
 if ($os =~ /linux/ig) {
 
-    my $result = system("chown -R $hConfig{ApacheUser}:$hConfig{ApacheGroup} $hConfig{TwikiPath}");
+    my $result = system("chown -R $hConfig{ApacheUser}:$hConfig{ApacheGroup} $hConfig{FoswikiPath}");
 
     if ($result != 0) {
-        $logger->error("Could not set hConfig{TwikiLibPath} permissions");
-        $logger->error("Manually execute \"chown -R $hConfig{ApacheUser}:$hConfig{ApacheGroup} $hConfig{TwikiPath}\" ");
+        $logger->error("Could not set hConfig{FoswikiLibPath} permissions");
+        $logger->error("Manually execute \"chown -R $hConfig{ApacheUser}:$hConfig{ApacheGroup} $hConfig{FoswikiPath}\" ");
     }
 }
 
-$logger->info("DONE: Twiki web generation");
+$logger->info("DONE: Foswiki web generation");
 
 ###############################################################################
 
@@ -101,13 +101,13 @@ sub isDir {
     find(\&checkXML, "$File::Find::name") if -d;
 }
 
-#check if xml exists and call twikiEmitter to create pages
+#check if xml exists and call foswikiEmitter to create pages
 sub checkXML {
     my $file = $_;
     if ($file =~ /entities\.xml/g) {
         $flag = 1;
         $logger->debug("Using $File::Find::name to parse confluence info\n");
-        parser::twikiEmitter("$File::Find::name", $logger, $session, $sHomeDir);
+        parser::foswikiEmitter("$File::Find::name", $logger, $session, $sHomeDir);
     }
 }
 

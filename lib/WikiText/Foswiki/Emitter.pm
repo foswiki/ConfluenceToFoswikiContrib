@@ -1,4 +1,4 @@
-package WikiText::TWiki::Emitter;
+package WikiText::Foswiki::Emitter;
 use strict;
 use warnings;
 
@@ -41,11 +41,11 @@ sub begin_node {
 	my $output = "";
 
 	if ($type eq "ul" || $type eq "ol") {
-		$WikiText::Receiver::TWiki::listlevel++;
+		$WikiText::Receiver::Foswiki::listlevel++;
 	} elsif ($type eq "li" && $node->{subtype} eq "unordered") {
-		$output .= " " x (3 * $WikiText::Receiver::TWiki::listlevel) . "* ";
+		$output .= " " x (3 * $WikiText::Receiver::Foswiki::listlevel) . "* ";
 	} elsif ($type eq "li" && $node->{subtype} eq "ordered") {
-		$output = " " x (3 * $WikiText::Receiver::TWiki::listlevel) . "1 ";
+		$output = " " x (3 * $WikiText::Receiver::Foswiki::listlevel) . "1 ";
 	} elsif ($type =~ /^h([1-6])$/) {
 		$output .= "---" . "+" x $1 . " ";
 	} elsif ($type eq "hr") {
@@ -96,7 +96,7 @@ sub begin_node {
 	} elsif ($type eq "mail") {
 		$output .= " $node->{attributes}{address} ";
 	} elsif ($type eq "anchor") {
-		$output .= "\n#" . to_twikiname($node->{attributes}{anchor}) . " ";
+		$output .= "\n#" . to_foswikiname($node->{attributes}{anchor}) . " ";
 	} elsif ($type eq "color") {
 		$output .= '<font color="#' . $node->{attributes}{color} . '">';
 		#print "COLOR= $node->{attributes}{color}";
@@ -110,36 +110,36 @@ sub begin_node {
 
 sub process_wikilink {
 	my $node = shift;
-	my ($web, $twikipage, $anchor, $output);
+	my ($web, $foswikipage, $anchor, $output);
 
 	if ($node->{attributes}{space}) {
-		$web = to_twikiname($node->{attributes}{space});
+		$web = to_foswikiname($node->{attributes}{space});
 	}
 	if ($node->{attributes}{page}) {
-		$twikipage = to_twikiname($node->{attributes}{page});
+		$foswikipage = to_foswikiname($node->{attributes}{page});
 	}
 	if ($node->{attributes}{anchor}) {
-		$anchor = to_twikiname($node->{attributes}{anchor});
+		$anchor = to_foswikiname($node->{attributes}{anchor});
 	}
 
 	if ($node->{attributes}{attachment}) {
-		if (!$twikipage) {	# attachment in current page
+		if (!$foswikipage) {	# attachment in current page
 			$output = "%ATTACHURL%/$node->{attributes}{attachment}";
 		} elsif (!$web) {	# attachment in current web
-			$output = "%PUBURLPATH%/%WEB%/$twikipage/$node->{attributes}{attachment}";
+			$output = "%PUBURLPATH%/%WEB%/$foswikipage/$node->{attributes}{attachment}";
 		} else {
-			$output = "%PUBURLPATH%/$web/$twikipage/$node->{attributes}{attachment}";
+			$output = "%PUBURLPATH%/$web/$foswikipage/$node->{attributes}{attachment}";
 		}
 	} elsif ($node->{attributes}{anchor}) {
 		$output = "$web." if $web;
-		$output .= "$twikipage" if $twikipage;
+		$output .= "$foswikipage" if $foswikipage;
 		$output .= "#$anchor";
-	} elsif ($web && !$twikipage) {	# bare web
+	} elsif ($web && !$foswikipage) {	# bare web
 		$output = "$web.WebHome";
 	} elsif ($web) {
-		$output = "$web.$twikipage";
+		$output = "$web.$foswikipage";
 	} else {
-		$output = "$twikipage";
+		$output = "$foswikipage";
 	}
 		
 	if ($node->{attributes}{linktext}) {	# wrap with linktext if necessary
@@ -151,7 +151,7 @@ sub process_wikilink {
 	return $output;
 }
 
-sub to_twikiname {
+sub to_foswikiname {
 	my $page = shift;
 
 	$page =~ s/[^a-zA-Z0-9_]/_/g;
@@ -179,7 +179,7 @@ sub end_node {
     $tag =~ s/-.*//;
 
 	if ($type eq "ul" || $type eq "ol") {
-		$WikiText::Receiver::TWiki::listlevel--;
+		$WikiText::Receiver::Foswiki::listlevel--;
 	} elsif ($type =~ /^(li|h[1-6])$/) {
 		$output .= "\n";
 	} elsif ($type eq "p") {

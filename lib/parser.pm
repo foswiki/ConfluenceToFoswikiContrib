@@ -14,10 +14,10 @@ use XML::LibXML;
 use Exporter;
 use Convertor;
 use WikiText::Confluence::Parser;
-use WikiText::TWiki::Emitter;
+use WikiText::Foswiki::Emitter;
 
 our @ISA = qw(Exporter);
-our @EXPORTS = qw(twikiEmitter);
+our @EXPORTS = qw(foswikiEmitter);
 
 my %pageinfo;
 my %attinfo;
@@ -26,7 +26,7 @@ my %newsinfo;
 my $logger;
 my $root = undef;
 
-sub twikiEmitter {
+sub foswikiEmitter {
     my $filename = shift;
     $logger = shift;
     my $session = shift;
@@ -74,7 +74,7 @@ sub twikiEmitter {
    
     foreach my $page (@pages) {
         my $currpage = process_page($page);
-        create_twiki_page($currpage, $currspace, $session, $sHomeDir, $webdir) if ($currpage);
+        create_foswiki_page($currpage, $currspace, $session, $sHomeDir, $webdir) if ($currpage);
     }
   
     
@@ -215,7 +215,7 @@ sub process_page {
     return $pageinfo{$pageid};  
 }
 
-sub create_twiki_page {
+sub create_foswiki_page {
 
     my ($pagehash, $currspace, $session, $sHomeDir, $webdir) = @_;
     my $parenttopic;
@@ -224,13 +224,13 @@ sub create_twiki_page {
     $WikiText::Parser::logger = $logger;
 
     if (defined $pagehash->{'title'}) {
-        $currspace = Utils::Common::toTwikiname($currspace);
-        $currtopic = Utils::Common::toTwikiname($currtopic);
+        $currspace = Utils::Common::toFoswikiname($currspace);
+        $currtopic = Utils::Common::toFoswikiname($currtopic);
      
     }
     
     if (defined($pageinfo{$pagehash->{'parentid'}}{'title'})) {
-        $parenttopic = Utils::Common::toTwikiname($pageinfo{$pagehash->{'parentid'}}{'title'});
+        $parenttopic = Utils::Common::toFoswikiname($pageinfo{$pagehash->{'parentid'}}{'title'});
     }
 
     my $attachs = $pagehash->{'attachments'};
@@ -242,7 +242,7 @@ sub create_twiki_page {
     }
 
     #if we find comments for that page we include those in page body text.
-    # as to current date there is no api for comments for TWiki page
+    # as to current date there is no api for comments for Foswiki page
     foreach my $comment ( @$comments) {
             $pagehash->{bodytext} = "$pagehash->{bodytext}" . "\n" . 
             "\n\n" . "__Comment$commentno" . "__" . " \n" . "---" . "\n\n" . $comminfo{$comment}{body};
@@ -250,10 +250,10 @@ sub create_twiki_page {
     }
     
     
-    # Convert Confluence markup to TWiki via WikiText
+    # Convert Confluence markup to Foswiki via WikiText
 
     $logger->debug("Confluence body:\n$pagehash->{bodytext}##End of Confluence body");
-    my $parser = WikiText::Confluence::Parser->new(receiver => WikiText::TWiki::Emitter->new);
+    my $parser = WikiText::Confluence::Parser->new(receiver => WikiText::Foswiki::Emitter->new);
     my $output;
     eval {$output = $parser->parse($pagehash->{bodytext} . "\n");};
     if ($@) {
@@ -262,13 +262,13 @@ sub create_twiki_page {
         $logger->error("Failed bodytext:\n$pagehash->{bodytext}##End of Confluence body");
         return;
     } else {
-        $logger->debug("TWiki body:\n$output##End of TWiki body");
+        $logger->debug("Foswiki body:\n$output##End of Foswiki body");
 #       return;
     }
 
-    # twiki by default has this webs, we need to rename them for publishing
+    # foswiki by default has this webs, we need to rename them for publishing
     
-    if ($currspace =~ /^(twiki|sandbox|main)$/i) {
+    if ($currspace =~ /^(system|sandbox|main)$/i) {
           $currspace = "Confluence" . "$1";
           $logger->info("Renamed web $1 to $currspace");
     }
@@ -307,10 +307,10 @@ sub create_news_page {
     my $parenttopic;
     my $currtopic = "News_". $newshash->{title};
 
-    $currspace = Utils::Common::toTwikiname($currspace);
-    $currtopic = Utils::Common::toTwikiname($currtopic);
+    $currspace = Utils::Common::toFoswikiname($currspace);
+    $currtopic = Utils::Common::toFoswikiname($currtopic);
      
-    my $parser = WikiText::Confluence::Parser->new(receiver => WikiText::TWiki::Emitter->new);
+    my $parser = WikiText::Confluence::Parser->new(receiver => WikiText::Foswiki::Emitter->new);
     my $output;
     eval {$output = $parser->parse($newshash->{body} . "\n");};
     if ($@) {
@@ -319,7 +319,7 @@ sub create_news_page {
         $logger->error("Failed bodytext:\n$newshash->{body}##End of Confluence body");
         return;
     } else {
-        $logger->debug("TWiki body:\n$output##End of TWiki body");
+        $logger->debug("Foswiki body:\n$output##End of Foswiki body");
     }
     
     my $re= Convertor::saveTopic($session, $currspace, $currtopic, $parenttopic, $output);

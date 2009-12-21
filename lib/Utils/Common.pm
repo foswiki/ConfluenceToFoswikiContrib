@@ -14,7 +14,7 @@ use Exporter;
 use Archive::Extract;
 use File::Basename;
 our @ISA = qw(Exporter);
-our @EXPORTS = qw(quote unZip replacesSpaces toTwikiname);
+our @EXPORTS = qw(quote unZip replacesSpaces toFoswikiname);
 
 sub quote($) {
 	my ($sStr) = @_;
@@ -52,12 +52,12 @@ sub replaceSpaces {
     return ($var1, $var2);
 }
 
-sub toTwikiname {
+sub toFoswikiname {
     my $name = shift;
 
     # first convert all non-alphanumeric characters to underscore
     # then capitalize all leading letters
-    # this needs to be kept in sync with WikiText::TWiki::Emitter::to_twikiname
+    # this needs to be kept in sync with WikiText::Foswiki::Emitter::to_foswikiname
     # otherwise the created page and space names will not match the links in the page contents
 
     $name =~ s/[^a-zA-Z0-9_]/_/g;
