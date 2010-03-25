@@ -1,7 +1,8 @@
 package WikiText::Confluence::Parser;
 use strict;
 use warnings;
-use base 'WikiText::Parser';
+use WikiText::Parser;
+our @ISA = qw( WikiText::Parser );
 
 # Reusable regexp generators used by the grammar
 my $ALPHANUM = '\p{Letter}\p{Number}\pM';

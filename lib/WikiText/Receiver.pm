@@ -57,7 +57,8 @@ WikiText::Receiver - An Interface Class
 
 =head1 SYNOPSIS
 
-    use base 'WikiText::Receiver';
+    use WikiText::Receiver;
+    our @ISA = qw( WikiText::Receiver );
     
 =head1 DESCRIPTION
 

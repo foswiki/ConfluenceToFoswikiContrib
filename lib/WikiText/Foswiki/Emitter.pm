@@ -2,7 +2,8 @@ package WikiText::Foswiki::Emitter;
 use strict;
 use warnings;
 
-use base 'WikiText::Receiver';
+use WikiText::Receiver;
+our @ISA = qw( WikiText::Receiver );
 use CGI::Util;
 
 my $type_tags = {

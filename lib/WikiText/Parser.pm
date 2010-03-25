@@ -179,7 +179,8 @@ WikiText::Parser - Base Class for Creating Text Format Parsers
 =head1 SYNOPSIS
 
     package MyParser;
-    use base 'WikiText::Parser';
+    use WikiText::Parser;
+    our @ISA = qw( WikiText::Parser );
 
     sub create_grammar { 
         return {
