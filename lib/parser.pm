@@ -331,6 +331,12 @@ sub create_foswiki_page {
       Convertor::saveTopic( $session, $currspace, $currtopic, $parenttopic,
         $output );
     if ($re) {
+
+        # The above call always seems to return 1 for me, even when the
+        # page is created. The documenatation shows that real errors are
+        # being raised by the code when a problem occurs - but with my
+        # error handling code they dont appear to be triggered - so 1 is
+        # a valid return value?
         $logger->error("Could not save topic $currtopic in $currspace");
         $logger->error("Details : $re");
     }
