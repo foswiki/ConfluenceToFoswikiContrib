@@ -127,6 +127,15 @@ sub saveAttachment {
     my ( $web, $topic, $name, $data ) = @_;
 
     $logger->info("Attaching $name to $topic in web $web");
+
+    # Checking to make sure the attachment actually exists
+    if ( ! -f "$data->{'filepath'}/1" ) {
+
+        # It doesn't - raising an error and returning
+        $logger->error("The attachment \"$data->{'filepath'}/1\" does not exist");
+        return 1;
+    }
+
     $logger->debug("file attached is $data->{'filepath'}/1");
 
     my $result = Foswiki::Func::saveAttachment(
