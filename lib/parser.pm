@@ -73,7 +73,12 @@ sub foswikiEmitter {
     }
 
     foreach my $page (@pages) {
-        my $currpage = process_page($page);
+
+        # Passing extra parameters beyond $page, as when parent pages are
+        # discovered create_foswiki_page needs to be called
+        my $currpage = process_page( $page, $currspace, $session, $sHomeDir,
+            $webdir );
+
         create_foswiki_page( $currpage, $currspace, $session, $sHomeDir,
             $webdir )
           if ($currpage);
@@ -157,7 +162,7 @@ sub process_space {
 }
 
 sub process_page {
-    my ($page) = @_;
+    my ($page, $currspace, $session, $sHomeDir, $webdir) = @_;
     my @attachids;
     my @commentids;
     my ( $pageid, $parentid, $original_version, $historical_version,
@@ -181,13 +186,25 @@ sub process_page {
     $parentid =
       $page->findvalue('./property[@name="parent"][@class="Page"]/id/text()');
 
+    # This code detects when a page has a parent that hasn't yet been
+    # processed, and then processes it. However this bypasses the normal
+    # process -> foswiki page create code, and a page doesnt get created -
+    # therefore adding page creation here as well
     if ( $parentid && !exists( $pageinfo{$parentid} ) ) {
         my @parents = $root->findnodes(
             '//object[@class="Page"][./id/text()="' . $parentid . '"]' );
         if ( $#parents != 0 ) {
             die "Couldn't find parent page of $pageid";
         }
-        process_page( $parents[0] );
+
+        # Processing parent page
+        my $currpage = process_page( $parents[0], $currspace, $session,
+            $sHomeDir, $webdir );
+
+        # Creating page if the parent page has not yet been processed
+        create_foswiki_page( $currpage, $currspace, $session, $sHomeDir,
+            $webdir )
+            if ($currpage);
     }
 
     $pageinfo{$pageid}{"id"}       = $pageid;
@@ -333,7 +350,7 @@ sub create_foswiki_page {
     if ($re) {
 
         # The above call always seems to return 1 for me, even when the
-        # page is created. The documenatation shows that real errors are
+        # page is created. The documentation shows that real errors are
         # being raised by the code when a problem occurs - but with my
         # error handling code they dont appear to be triggered - so 1 is
         # a valid return value?
