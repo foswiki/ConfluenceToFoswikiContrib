@@ -332,6 +332,27 @@ sub create_foswiki_page {
         return;
     }
     else {
+
+        # Replacing all normal linefeeds that dont have a blank line
+        # following them with '<br />' - otherwise foswiki ignores the
+        # newline. Note this includes inside verbatim blocks, which is
+        # not desired
+        # Ignoring '-' lines - typically foswiki markup. '-' is a
+        # metacharacter in the character set so needs escaping
+        # Adding <br /> to the end of a table line breaks it completely,
+        # so avoiding that ('\')
+        # Similarly emboldened lines are broken ('*') with a break right
+        # next to *, however one space is enough to fix this
+        $output =~ s!([^\|])(\n[^\-\n|])!$1 <br />$2!mg;
+        #$output =~ s!(\n[^\-\n|])! <br />$1!mg;
+
+        # The above adds breaks to the end of '\' lines - this isn't
+        # necessary
+        $output =~ s!^\\<br />$!!mg;
+
+        # Restoring spurious double breaks lines
+        $output =~ s!^\<br />\<br />$!\<br />!mg;
+
         $logger->debug("Foswiki body:\n$output##End of Foswiki body");
 
         #       return;
