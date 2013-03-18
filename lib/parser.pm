@@ -73,7 +73,12 @@ sub foswikiEmitter {
     }
 
     foreach my $page (@pages) {
-        my $currpage = process_page($page);
+
+        # Passing extra parameters beyond $page, as when parent pages are
+        # discovered create_foswiki_page needs to be called
+        my $currpage = process_page( $page, $currspace, $session, $sHomeDir,
+            $webdir );
+
         create_foswiki_page( $currpage, $currspace, $session, $sHomeDir,
             $webdir )
           if ($currpage);
@@ -157,7 +162,7 @@ sub process_space {
 }
 
 sub process_page {
-    my ($page) = @_;
+    my ($page, $currspace, $session, $sHomeDir, $webdir) = @_;
     my @attachids;
     my @commentids;
     my ( $pageid, $parentid, $original_version, $historical_version,
@@ -181,13 +186,25 @@ sub process_page {
     $parentid =
       $page->findvalue('./property[@name="parent"][@class="Page"]/id/text()');
 
+    # This code detects when a page has a parent that hasn't yet been
+    # processed, and then processes it. However this bypasses the normal
+    # process -> foswiki page create code, and a page doesnt get created -
+    # therefore adding page creation here as well
     if ( $parentid && !exists( $pageinfo{$parentid} ) ) {
         my @parents = $root->findnodes(
             '//object[@class="Page"][./id/text()="' . $parentid . '"]' );
         if ( $#parents != 0 ) {
             die "Couldn't find parent page of $pageid";
         }
-        process_page( $parents[0] );
+
+        # Processing parent page
+        my $currpage = process_page( $parents[0], $currspace, $session,
+            $sHomeDir, $webdir );
+
+        # Creating page if the parent page has not yet been processed
+        create_foswiki_page( $currpage, $currspace, $session, $sHomeDir,
+            $webdir )
+            if ($currpage);
     }
 
     $pageinfo{$pageid}{"id"}       = $pageid;
@@ -315,6 +332,27 @@ sub create_foswiki_page {
         return;
     }
     else {
+
+        # Replacing all normal linefeeds that dont have a blank line
+        # following them with '<br />' - otherwise foswiki ignores the
+        # newline. Note this includes inside verbatim blocks, which is
+        # not desired
+        # Ignoring '-' lines - typically foswiki markup. '-' is a
+        # metacharacter in the character set so needs escaping
+        # Adding <br /> to the end of a table line breaks it completely,
+        # so avoiding that ('\')
+        # Similarly emboldened lines are broken ('*') with a break right
+        # next to *, however one space is enough to fix this
+        $output =~ s!([^\|])(\n[^\-\n|])!$1 <br />$2!mg;
+        #$output =~ s!(\n[^\-\n|])! <br />$1!mg;
+
+        # The above adds breaks to the end of '\' lines - this isn't
+        # necessary
+        $output =~ s!^\\<br />$!!mg;
+
+        # Restoring spurious double breaks lines
+        $output =~ s!^\<br />\<br />$!\<br />!mg;
+
         $logger->debug("Foswiki body:\n$output##End of Foswiki body");
 
         #       return;
@@ -331,6 +369,12 @@ sub create_foswiki_page {
       Convertor::saveTopic( $session, $currspace, $currtopic, $parenttopic,
         $output );
     if ($re) {
+
+        # The above call always seems to return 1 for me, even when the
+        # page is created. The documentation shows that real errors are
+        # being raised by the code when a problem occurs - but with my
+        # error handling code they dont appear to be triggered - so 1 is
+        # a valid return value?
         $logger->error("Could not save topic $currtopic in $currspace");
         $logger->error("Details : $re");
     }

@@ -88,21 +88,67 @@ sub extractSiteXML {
         return 0;    #error
     }
 
+    # Making sure XML path exists
+    if (! -d "$xmlpath") {
+
+        # It doesn't - attempting to make it
+        if (!mkdir "$xmlpath") {
+
+            # Directory creation failed - logging error and returning
+            $logger->error("Unable to create XML directory: $xmlpath");
+            $logger->error("Error: $!");
+            return 0;    #error
+        }
+    }
+
     foreach my $url (@spaceurls) {
+
         my $http  = new HTTP::Lite;
         my @parts = split /\//, $url;
         my $fname = $parts[ scalar(@parts) - 1 ];
         $url .= $params;
-        open OUT, ">$xmlpath/$fname";
+
+        # Opening output file
+        if (!open OUT, ">$xmlpath/$fname") {
+
+            # Attempt to open failed - logging and moving on to next URL
+            $logger->error("Could not open the following path for "
+                . "writing: $xmlpath/$fname");
+            $logger->error("Error: $!");
+            $logger->error("URL: $url");
+            undef $http;
+            next;
+        }
+
+        # Attempting to fetch URL
         my $ret = $http->request($url);
+
+        # Making sure the above request actually worked
+        if ( !defined $ret ) {
+
+            # It didn't - logging and moving on to next URL
+            $logger->error("Could not download $url");
+            $logger->error("Error: $!");
+            undef $http;
+            next;
+        }
+
+        # The request 'worked', but checking to see if the webserver
+        # encountered an error
         if ( $ret != 200 ) {
+
+            # It did - logging but continuing so a user can see the
+            # contents of the response
             $logger->error("Could not download $url");
             $logger->error("HTTP returned code: $ret");
         }
-        my @len = $http->get_header("Content-Length");
 
+        # Writing out response to file
+        my @len = $http->get_header("Content-Length");
         syswrite OUT, $http->body(), $len[0];
         close OUT;
+
+        # Cleaning up
         undef $http;
     }
 

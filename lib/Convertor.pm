@@ -9,6 +9,8 @@ package Convertor;
 
 use strict;
 use warnings;
+use Error qw(:try);
+use Error::Simple;
 use Exporter;
 use Foswiki;
 use Foswiki::Func;
@@ -76,7 +78,35 @@ sub saveTopic {
         if ($parent) {
             $meta->put( 'TOPICPARENT', { name => $parent } );
         }
-        my $result = Foswiki::Func::saveTopic( $web, $topic, $meta, $text );
+
+        # Attempting to save wiki topic catching any errors
+        my $result;
+        try {
+            $result = Foswiki::Func::saveTopic( $web, $topic, $meta, $text );
+        } catch Foswiki::AccessControlException with {
+
+            # Documentation: http://foswiki.org/System/PerlDoc?module=Foswiki::AccessControlException
+            my $e = shift;
+
+            # Logging error
+            $logger->error("Failed to create topic \"$topic\"\n");
+            $logger->error("Reason: $e->{reason}\n");
+
+        } catch Error::Simple with {
+            my $e = shift;
+
+            # Logging error
+            $logger->error("Failed to create topic \"$topic\"\n");
+            $logger->error("Error description: $e->{'\-text'}\n");
+            $logger->error("Error number: $e->{'\-value'}\n");
+
+        } otherwise {
+
+            # Logging unknown error
+            $logger->error("Failed to create topic \"$topic\"\n");
+            $logger->error("Unknown error occurred\n");
+        };
+
         return $result;
     }
     else {
@@ -97,6 +127,15 @@ sub saveAttachment {
     my ( $web, $topic, $name, $data ) = @_;
 
     $logger->info("Attaching $name to $topic in web $web");
+
+    # Checking to make sure the attachment actually exists
+    if ( ! -f "$data->{'filepath'}/1" ) {
+
+        # It doesn't - raising an error and returning
+        $logger->error("The attachment \"$data->{'filepath'}/1\" does not exist");
+        return 1;
+    }
+
     $logger->debug("file attached is $data->{'filepath'}/1");
 
     my $result = Foswiki::Func::saveAttachment(
